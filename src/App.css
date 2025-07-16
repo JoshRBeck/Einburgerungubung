@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+   /* Core Colors */
+  --color-bg: oklch(0.23 0.01 250);            /* slate-800 */
+  --color-surface: oklch(0.27 0.01 250);       /* slate-700 */
+  --color-border: oklch(0.4 0 0 / 0.2);
+  --color-text: oklch(0.95 0.01 250);
+  --color-accent: oklch(0.65 0.22 260);        /* Indigo */
+  --color-accent-hover: oklch(0.6 0.22 260);
+  --color-muted: oklch(0.45 0.05 250);         /* Grayish */
+  --color-muted-hover: oklch(0.4 0.05 250);
+
+  /* Primary / Accent */
+  --color-primary-500: oklch(0.72 0.14 190); /* bright minty-sky */
+  --color-primary-600: oklch(0.64 0.14 190);
+  --color-primary-700: oklch(0.56 0.14 190);
+
+  /* Feedback */
+  --color-correct-500: oklch(0.72 0.12 145);  /* greenish */
+  --color-wrong-500: oklch(0.72 0.13 25);     /* reddish-orange */
+  --color-neutral-500: oklch(0.4 0.01 260);   /* card border / neutral */
+
+  /* Other Tokens */
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+}
