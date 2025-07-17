@@ -1,17 +1,40 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../context/auth-context";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 const Account: React.FC = () => {
   const { user } = useAuth();
 
+  const [stats, setStats] = useState<{
+    answersCorrect: number;
+    answersWrong: number;
+    questionsAnswered: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (user) {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setStats(docSnap.data() as typeof stats);
+        }
+      }
+    };
+    fetchStats();
+  }, [user]);
+
   // Example stats, replace with real data if available
-  const answersCorrect = 42;
-  const answersWrong = 13;
-  const ratio = answersCorrect + answersWrong > 0
-    ? ((answersCorrect / (answersCorrect + answersWrong)) * 100).toFixed(1)
-    : "N/A";
+  const answersCorrect = stats?.answersCorrect ?? 0;
+  const answersWrong = stats?.answersWrong ?? 0;
+  const ratio =
+    answersCorrect + answersWrong > 0
+      ? ((answersCorrect / (answersCorrect + answersWrong)) * 100).toFixed(1)
+      : "N/A";
 
   return (
     <div className="space-y-6">
@@ -28,8 +51,12 @@ const Account: React.FC = () => {
       </div>
 
       <div className="flex gap-4">
-        <Link to="/" className="text-accent underline">Go to Main Test</Link>
-        <Link to="/review" className="text-accent underline">Review Mistakes</Link>
+        <Link to="/" className="text-accent underline">
+          Go to Main Test
+        </Link>
+        <Link to="/review" className="text-accent underline">
+          Review Mistakes
+        </Link>
       </div>
 
       <button

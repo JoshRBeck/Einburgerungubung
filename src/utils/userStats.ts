@@ -1,5 +1,5 @@
 import { db } from "../firebase";
-import { doc, updateDoc, increment } from "firebase/firestore";
+import { setDoc, doc, increment } from "firebase/firestore";
 
 type StatKey = "answersCorrect" | "answersWrong" | "questionsAnswered";
 type StatUpdate = Partial<Record<StatKey, ReturnType<typeof increment>>>;
@@ -20,7 +20,7 @@ export const updateUserStats = async (
   }
   try {
     const userDocRef = doc(db, "users", uid);
-    await updateDoc(userDocRef, updates);
+    await setDoc(userDocRef, updates, { merge: true }); 
     console.log("User stats updated.");
   } catch (err) {
     console.error("Error updating stats:", err);
