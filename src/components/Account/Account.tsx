@@ -11,9 +11,11 @@ const Account: React.FC = () => {
   const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
       if (user) {
         try {
           const docRef = doc(db, "users", user.uid);
@@ -31,10 +33,12 @@ const Account: React.FC = () => {
           console.error("Failed to fetch user stats:", err);
         }
       }
+      setLoading(false);
     };
     fetchStats();
   }, [user]);
 
+  if (loading) return <div>Loading...</div>;
   const answersCorrect = stats?.answersCorrect ?? 0;
   const answersWrong = stats?.answersWrong ?? 0;
   const ratio =
