@@ -6,6 +6,7 @@ import { auth } from "../../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { UserStats } from "../../types/userStats";
+import { isUserStats } from "../../utils/userStats";
 
 const Account: React.FC = () => {
   const { user } = useAuth();
@@ -21,8 +22,14 @@ const Account: React.FC = () => {
           const docRef = doc(db, "users", user.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            setStats(docSnap.data() as UserStats);
-            setError(null);
+            const data = docSnap.data();
+            if (isUserStats(data)) {
+              setStats(data);
+              setError(null);
+            } else {
+              setStats(null);
+              setError("User stats data is invalid.");
+            }
           } else {
             setStats(null);
             setError("No stats found for this user.");
