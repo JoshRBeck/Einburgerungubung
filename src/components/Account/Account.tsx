@@ -5,30 +5,36 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../firebase";
+import { UserStats } from "../../types/userStats";
 
 const Account: React.FC = () => {
   const { user } = useAuth();
-
-  const [stats, setStats] = useState<{
-    answersCorrect: number;
-    answersWrong: number;
-    questionsAnswered: number;
-  } | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
       if (user) {
-        const docRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setStats(docSnap.data() as typeof stats);
+        try {
+          const docRef = doc(db, "users", user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setStats(docSnap.data() as UserStats);
+            setError(null);
+          } else {
+            setStats(null);
+            setError("No stats found for this user.");
+          }
+        } catch (err) {
+          setStats(null);
+          setError("Failed to fetch user stats.");
+          console.error("Failed to fetch user stats:", err);
         }
       }
     };
     fetchStats();
   }, [user]);
 
-  // Example stats, replace with real data if available
   const answersCorrect = stats?.answersCorrect ?? 0;
   const answersWrong = stats?.answersWrong ?? 0;
   const ratio =
@@ -65,6 +71,8 @@ const Account: React.FC = () => {
       >
         Logout
       </button>
+
+      {error && <div className="text-wrong-500 font-semibold">{error}</div>}
     </div>
   );
 };

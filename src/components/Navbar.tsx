@@ -14,7 +14,6 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto flex justify-between items-center px-4 py-4">
         {/* Left: Logo */}
         <div className="flex items-center space-x-2">
-          {/* <img src="your-logo-url.png" alt="App Logo" className="h-8" /> */}
           <Link
             to="/"
             className="text-lg font-semibold text-accent hover:underline"

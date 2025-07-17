@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { updateUserStats } from "../utils/userStats";
 import { useAuth } from "../context/auth-context"; 
+import { Question } from "../types/question";
 
-interface QuestionProps {
-  question: string;
-  answers: string[];
-  correctAnswer: string;
+interface QuestionProps extends Question {
   index: number;
 }
 

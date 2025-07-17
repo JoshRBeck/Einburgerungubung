@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import questionItems from "../questions.json";
-import QuestionComponent from "./question";
+import QuestionComponent from "./QuestionComponent";
 
 const QuestionLogic: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
