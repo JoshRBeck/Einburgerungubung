@@ -45,7 +45,14 @@ const Account: React.FC = () => {
     fetchStats();
   }, [user]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-40">
+        <span className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></span>
+        <span className="ml-2">Loading your stats...</span>
+      </div>
+    );
+  }
   const answersCorrect = stats?.answersCorrect ?? 0;
   const answersWrong = stats?.answersWrong ?? 0;
   const ratio =

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { updateUserStats } from "../utils/userStats";
-import { useAuth } from "../context/auth-context"; 
+import { useAuth } from "../context/auth-context";
 import { Question } from "../types/question";
 
 interface QuestionProps extends Question {
@@ -15,52 +15,43 @@ const QuestionComponent: React.FC<QuestionProps> = ({
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showFeedback, setShowFeedback] = useState(false);
-  const { user } = useAuth(); 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const handleSelectAnswer = async (answer: string) => {
-    if (!showFeedback) {
+    if (!showFeedback && user) {
       setSelectedAnswer(answer);
       setShowFeedback(true);
-
-      if (user) {
-        const isCorrect = answer === correctAnswer;
-        await updateUserStats(user.uid, isCorrect, 1);
+      setIsSubmitting(true);
+      setSubmitError(null);
+      setSubmitSuccess(null);
+      const isCorrect = answer === correctAnswer;
+      try {
+        await updateUserStats(user.uid, isCorrect, 1, user.email || undefined);
+        setSubmitSuccess("Your answer was saved!");
+      } catch (err) {
+        console.error("Failed to save your answer:", err);
+        setSubmitError("Failed to save your answer. Please try again.");
       }
+      setIsSubmitting(false);
     }
   };
 
   return (
     <section className="bg-surface text-text rounded-lg p-6 shadow-lg max-w-xl mx-auto">
-      <h1 className="text-xl font-semibold mb-4">
-        Aufgabe {index + 1}
-      </h1>
-
+      <h1 className="text-xl font-semibold mb-4">Aufgabe {index + 1}</h1>
       <h2 className="text-lg mb-6 text-center">{question}</h2>
-
       <ul className="grid gap-4">
         {answers.map((answer, i) => {
           const isSelected = selectedAnswer === answer;
-          const isCorrect = answer === correctAnswer;
-
-          const baseClasses =
-            "w-full text-left px-4 py-2 rounded-md border transition duration-300 cursor-pointer";
-          const defaultStyle = "bg-muted text-text border-border hover:bg-muted-hover";
-          const correctStyle = "bg-correct-500 text-white border-correct-500";
-          const incorrectStyle = "bg-wrong-500 text-white border-wrong-500";
-
-          let answerClass = baseClasses + " " + defaultStyle;
-
-          if (showFeedback) {
-            if (isCorrect) answerClass = baseClasses + " " + correctStyle;
-            else if (isSelected) answerClass = baseClasses + " " + incorrectStyle;
-          }
-
           return (
             <li key={i}>
               <button
-                className={answerClass}
+                className="w-full text-left px-4 py-2 rounded-md border transition duration-300 cursor-pointer"
                 onClick={() => handleSelectAnswer(answer)}
-                disabled={showFeedback}
+                disabled={showFeedback || isSubmitting}
                 aria-pressed={isSelected}
               >
                 {answer}
@@ -69,7 +60,21 @@ const QuestionComponent: React.FC<QuestionProps> = ({
           );
         })}
       </ul>
-
+      {isSubmitting && (
+        <div className="mt-4 text-center text-accent">
+          Saving your answer...
+        </div>
+      )}
+      {submitSuccess && (
+        <div className="mt-4 text-center text-correct-500 font-semibold">
+          {submitSuccess}
+        </div>
+      )}
+      {submitError && (
+        <div className="mt-4 text-center text-wrong-500 font-semibold">
+          {submitError}
+        </div>
+      )}
       {showFeedback && (
         <div className="mt-6 text-center">
           <p

@@ -1,26 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { UserCredential } from "firebase/auth";
 import useSignUp from "../../composables/useSignUp";
 import { useAuth } from "../../context/auth-context";
+import type { UserStats } from "../../types/userStats";
 import { useNavigate, Link } from "react-router-dom";
-import { getAuth } from "firebase/auth";
+import { UserCredential } from "firebase/auth";
 import { db } from "../../firebase";
 import { doc, setDoc } from "firebase/firestore";
 
-
-
 const createUserStats = async (uid: string, email: string) => {
-  const auth = getAuth();
-  console.log("Current user:", auth.currentUser);
-  await setDoc(doc(db, "users", uid), {
+  const stats: UserStats = {
     email,
     answersCorrect: 0,
     answersWrong: 0,
     questionsAnswered: 0,
-  });
-  
+  };
+  await setDoc(doc(db, "users", uid), stats);
 };
-
 
 const SignUpComponent = () => {
   const { error, isPending, signup } = useSignUp();
