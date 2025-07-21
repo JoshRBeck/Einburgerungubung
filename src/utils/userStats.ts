@@ -1,61 +1,68 @@
 import { db } from "../firebase";
-import { setDoc, doc, increment, getDoc } from "firebase/firestore";
+import { setDoc, doc, getDoc } from "firebase/firestore";
 import type { UserStats } from "../types/userStats";
 
-type StatKey = keyof Omit<UserStats, "email">;
-type StatUpdate = Partial<Record<StatKey, ReturnType<typeof increment>>>;
-
-export function isUserStats(data: unknown): data is UserStats {
-  console.log("Checking user stats:", data);
-  if (
-    typeof data === "object" &&
-    data !== null
-  ) {
-    const obj = data as Record<string, unknown>;
-    return (
-      typeof obj.email === "string" &&
-      typeof obj.answersCorrect === "number" &&
-      typeof obj.answersWrong === "number" &&
-      typeof obj.questionsAnswered === "number"
-    );
-  }
-  return false;
+export function isUserStats(obj: unknown): obj is UserStats {
+  if (!obj || typeof obj !== "object") return false;
+  const stats = obj as Record<string, unknown>;
+  return (
+    typeof stats.email === "string" &&
+    typeof stats.answersCorrect === "number" &&
+    typeof stats.answersWrong === "number" &&
+    typeof stats.questionsAnswered === "number" &&
+    typeof stats.categoryStats === "object"
+  );
 }
 
-export const updateUserStats = async (
+export async function updateUserStats(
   uid: string,
-  correct: boolean,
+  isCorrect: boolean,
   numbersOfQuestion: number,
-  email?: string // Optionally pass email
-): Promise<void> => {
-  const updates: StatUpdate = {};
-  if (correct) {
-    updates.answersCorrect = increment(1);
-  } else {
-    updates.answersWrong = increment(1);
-  }
-  if (numbersOfQuestion > 0) {
-    updates.questionsAnswered = increment(1);
+  email?: string,
+  category?: string
+): Promise<void> {
+  const userDocRef = doc(db, "users", uid);
+  const docSnap = await getDoc(userDocRef);
+
+  let stats: UserStats | null = null;
+  if (docSnap.exists()) {
+    stats = docSnap.data() as UserStats;
   }
 
-  // Defensive: ensure email is present
-  const userDocRef = doc(db, "users", uid);
-  let needsEmail = false;
-  if (email) {
-    const docSnap = await getDoc(userDocRef);
-    if (!docSnap.exists() || typeof docSnap.data().email !== "string") {
-      needsEmail = true;
+  // Defensive: initialize if missing
+  if (!stats) {
+    stats = {
+      email: email || "",
+      answersCorrect: 0,
+      answersWrong: 0,
+      questionsAnswered: 0,
+      categoryStats: {},
+    };
+  }
+
+  // Update top-level stats
+  stats.answersCorrect += isCorrect ? 1 : 0;
+  stats.answersWrong += isCorrect ? 0 : 1;
+  stats.questionsAnswered += numbersOfQuestion > 0 ? 1 : 0;
+
+  // Update category stats
+  if (category) {
+    if (!stats.categoryStats) stats.categoryStats = {};
+    if (!stats.categoryStats[category]) stats.categoryStats[category] = { correct: 0, wrong: 0 };
+    if (isCorrect) {
+      stats.categoryStats[category].correct += 1;
+    } else {
+      stats.categoryStats[category].wrong += 1;
     }
   }
 
+  // Always ensure email is present
+  if (email) stats.email = email;
+
   try {
-    await setDoc(
-      userDocRef,
-      needsEmail ? { ...updates, email } : updates,
-      { merge: true }
-    );
+    await setDoc(userDocRef, stats, { merge: true });
     console.log("User stats updated.");
   } catch (err) {
     console.error("Error updating stats:", err);
   }
-};
+}

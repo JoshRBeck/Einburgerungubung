@@ -6,6 +6,16 @@ import { useNavigate, Link } from "react-router-dom";
 import { UserCredential } from "firebase/auth";
 import { db } from "../../firebase";
 import { doc, setDoc } from "firebase/firestore";
+import questions from "../../questions.json"
+
+const getInitialCategoryStats = () => {
+  const categories = Array.from(new Set(questions.map(q => q.category)));
+  const stats: Record<string, { correct: number; wrong: number }> = {};
+  categories.forEach(cat => {
+    stats[cat] = { correct: 0, wrong: 0 };
+  });
+  return stats;
+};
 
 const createUserStats = async (uid: string, email: string) => {
   const stats: UserStats = {
@@ -13,10 +23,10 @@ const createUserStats = async (uid: string, email: string) => {
     answersCorrect: 0,
     answersWrong: 0,
     questionsAnswered: 0,
+    categoryStats: getInitialCategoryStats(),
   };
   await setDoc(doc(db, "users", uid), stats);
 };
-
 const SignUpComponent = () => {
   const { error, isPending, signup } = useSignUp();
   const [email, setEmail] = useState("");

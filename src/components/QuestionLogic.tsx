@@ -1,14 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import questionItems from "../questions.json";
 import QuestionComponent from "./QuestionComponent";
 
 const QuestionLogic: React.FC = () => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const currentQuestion = questionItems[currentQuestionIndex];
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [performance, setPerformance] = useState<{
+    [key: string]: { correct: number; wrong: number };
+  }>({});
+
+  // Get unique categories
+  const categories = useMemo(() => {
+    const allCategories = questionItems.map((q) => q.category);
+    return ["All", ...Array.from(new Set(allCategories))];
+  }, []);
+
+  // Filter questions based on selected category
+  const filteredQuestions = useMemo(() => {
+    return selectedCategory === "All"
+      ? questionItems
+      : questionItems.filter((q) => q.category === selectedCategory);
+  }, [selectedCategory]);
+
+  const currentQuestion = filteredQuestions[currentQuestionIndex];
 
   const handleNextQuestion = () => {
     setCurrentQuestionIndex((prev) =>
-      prev < questionItems.length - 1 ? prev + 1 : prev
+      prev < filteredQuestions.length - 1 ? prev + 1 : prev
     );
   };
 
@@ -23,8 +41,26 @@ const QuestionLogic: React.FC = () => {
   };
 
   const handleRandomQuestion = () => {
-    const randomIndex = Math.floor(Math.random() * questionItems.length);
+    const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
     setCurrentQuestionIndex(randomIndex);
+  };
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCategory(e.target.value);
+    setCurrentQuestionIndex(0); // reset to first question of that category
+  };
+
+  const handleAnswer = (wasCorrect: boolean, category: string) => {
+    setPerformance((prev) => {
+      const stats = prev[category] || { correct: 0, wrong: 0 };
+      return {
+        ...prev,
+        [category]: {
+          correct: stats.correct + (wasCorrect ? 1 : 0),
+          wrong: stats.wrong + (wasCorrect ? 0 : 1),
+        },
+      };
+    });
   };
 
   return (
@@ -42,7 +78,7 @@ const QuestionLogic: React.FC = () => {
 
           <button
             onClick={handleNextQuestion}
-            disabled={currentQuestionIndex === questionItems.length - 1}
+            disabled={currentQuestionIndex === filteredQuestions.length - 1}
             className="bg-muted text-text border border-border rounded px-4 py-2 transition hover:bg-muted-hover disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Next ➡️
@@ -56,7 +92,20 @@ const QuestionLogic: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col lg:flex-col sm:flex-row gap-2 items-center">
+          <label className="text-sm text-text">Category:</label>
+          <select
+            value={selectedCategory}
+            onChange={handleCategoryChange}
+            className="rounded-md border border-border bg-surface text-text px-3 py-2"
+          >
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+
           <label htmlFor="question-select" className="text-sm text-text">
             Jump to:
           </label>
@@ -66,7 +115,7 @@ const QuestionLogic: React.FC = () => {
             onChange={handleSelectQuestion}
             className="rounded-md border border-border bg-surface text-text px-3 py-2"
           >
-            {questionItems.map((_, index) => (
+            {filteredQuestions.map((_, index) => (
               <option key={index} value={index}>
                 Question {index + 1}
               </option>
@@ -76,13 +125,27 @@ const QuestionLogic: React.FC = () => {
       </div>
 
       {/* Question */}
-      <QuestionComponent
-        key={currentQuestionIndex}
-        index={currentQuestionIndex}
-        question={currentQuestion.question}
-        answers={currentQuestion.answers}
-        correctAnswer={currentQuestion.correct_answer}
-      />
+      {currentQuestion && (
+        <QuestionComponent
+          key={currentQuestionIndex}
+          index={currentQuestionIndex}
+          question={currentQuestion.question}
+          answers={currentQuestion.answers}
+          correctAnswer={currentQuestion.correct_answer}
+          category={currentQuestion.category}
+          onAnswer={handleAnswer}
+        />
+      )}
+
+      {/* Performance */}
+      <div className="mt-6 border-t pt-4 text-sm text-text">
+        <h2 className="font-semibold mb-2">Performance Summary</h2>
+        {Object.entries(performance).map(([cat, stats]) => (
+          <div key={cat}>
+            <strong>{cat}:</strong> ✅ {stats.correct} | ❌ {stats.wrong}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

@@ -3,6 +3,12 @@ export interface UserStats {
   answersCorrect: number;
   answersWrong: number;
   questionsAnswered: number;
+  categoryStats: {
+    [category: string]: {
+      correct: number;
+      wrong: number;
+    };
+  };
 }
 
 export interface Question {

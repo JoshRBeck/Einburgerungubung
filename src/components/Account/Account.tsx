@@ -24,10 +24,16 @@ const Account: React.FC = () => {
           if (docSnap.exists()) {
             const data = docSnap.data();
             if (isUserStats(data)) {
-              setStats(data);
+              setStats(data as UserStats);
               setError(null);
             } else {
-              setStats(null);
+              setStats({
+                email: user.email || "",
+                answersCorrect: 0,
+                answersWrong: 0,
+                questionsAnswered: 0,
+                categoryStats: {},
+              });
               setError("User stats data is invalid.");
             }
           } else {
@@ -72,6 +78,22 @@ const Account: React.FC = () => {
           <li>Wrong Answers: {answersWrong}</li>
           <li>Accuracy: {ratio}%</li>
         </ul>
+      </div>
+      <div className="bg-muted p-4 rounded-lg mt-4">
+        <h4 className="font-semibold mb-2">Performance by Category</h4>
+        {stats?.categoryStats && Object.keys(stats.categoryStats).length > 0 ? (
+          <ul>
+            {Object.entries(stats.categoryStats).map(([cat, s]) => (
+              <li key={cat} className="mb-1">
+                <span className="font-medium">{cat}:</span>{" "}
+                <span className="text-correct-500">✅ {s.correct}</span>{" "}
+                <span className="text-wrong-500">❌ {s.wrong}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-muted">No category stats yet.</div>
+        )}
       </div>
 
       <div className="flex gap-4">
