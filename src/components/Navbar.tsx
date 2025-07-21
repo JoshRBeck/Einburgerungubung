@@ -18,7 +18,7 @@ const Navbar: React.FC = () => {
             to="/"
             className="text-lg font-semibold text-accent hover:underline"
           >
-            QuizMaster
+            BürgerApp
           </Link>
         </div>
 

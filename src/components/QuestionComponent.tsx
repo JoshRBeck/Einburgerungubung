@@ -21,19 +21,27 @@ const QuestionComponent: React.FC<QuestionProps> = ({
   const { user } = useAuth();
 
   const handleSelectAnswer = async (answer: string) => {
-    if (!showFeedback && user) {
+    if (!showFeedback) {
       setSelectedAnswer(answer);
       setShowFeedback(true);
       setIsSubmitting(true);
       setSubmitError(null);
       setSubmitSuccess(null);
       const isCorrect = answer === correctAnswer;
-      try {
-        await updateUserStats(user.uid, isCorrect, 1, user.email || undefined);
-        setSubmitSuccess("Your answer was saved!");
-      } catch (err) {
-        console.error("Failed to save your answer:", err);
-        setSubmitError("Failed to save your answer. Please try again.");
+
+      if (user) {
+        try {
+          await updateUserStats(
+            user.uid,
+            isCorrect,
+            1,
+            user.email || undefined
+          );
+          setSubmitSuccess("Your answer was saved!");
+        } catch (err) {
+          console.error("Failed to save your answer:", err);
+          setSubmitError("Failed to save your answer. Please try again.");
+        }
       }
       setIsSubmitting(false);
     }
@@ -88,6 +96,11 @@ const QuestionComponent: React.FC<QuestionProps> = ({
               ? "✅ Correct!"
               : `❌ Incorrect. The correct answer is: ${correctAnswer}`}
           </p>
+        </div>
+      )}
+      {!user && showFeedback && (
+        <div className="mt-2 text-center text-muted">
+          Sign up or log in to save your progress!
         </div>
       )}
     </section>
